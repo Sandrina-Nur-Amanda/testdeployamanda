@@ -1,50 +1,40 @@
 import streamlit as st
 from ultralytics import YOLO
 import tensorflow as tf
-from tensorflow.keras.preprocessing import image
-import numpy as np
-from PIL import Image
 import cv2
+from PIL import Image
+import numpy as np
+import torch
 
-# ==========================
-# Load Models
-# ==========================
-@st.cache_resource
-def load_models():
-    yolo_model = YOLO("Model/Sandrina Nur Amanda_Laporan 4.pt")  # Model deteksi objek
-    classifier = tf.keras.models.load_model("Model/best_model_transfer_amanda.h5")  # Model klasifikasi
-    return yolo_model, classifier
+st.set_page_config(page_title="WildCat Detector", layout="wide")
 
-yolo_model, classifier = load_models()
+st.title("🐆 WildCat Image Detection Dashboard")
 
-# ==========================
-# UI
-# ==========================
-st.title("🧠 Image Classification & Object Detection App")
+# Load model
+yolo_model = YOLO("Model/Sandrina Nur Amanda_Laporan 4.pt")
+tf_model = tf.keras.models.load_model("Model/best_model_transfer_amanda.h5")
 
-menu = st.sidebar.selectbox("Pilih Mode:", ["Deteksi Objek (YOLO)", "Klasifikasi Gambar"])
+uploaded_file = st.file_uploader("Upload gambar hewan (jpg/png)", type=["jpg", "png", "jpeg"])
 
-uploaded_file = st.file_uploader("Unggah Gambar", type=["jpg", "jpeg", "png"])
+if uploaded_file:
+    image = Image.open(uploaded_file)
+    st.image(image, caption="Gambar diunggah", use_column_width=True)
 
-if uploaded_file is not None:
-    img = Image.open(uploaded_file)
-    st.image(img, caption="Gambar yang Diupload", use_container_width=True)
+    # Convert image to array
+    img_array = np.array(image)
 
-    if menu == "Deteksi Objek (YOLO)":
-        # Deteksi objek
-        results = yolo_model(img)
-        result_img = results[0].plot()  # hasil deteksi (gambar dengan box)
-        st.image(result_img, caption="Hasil Deteksi", use_container_width=True)
+    try:
+        # Prediksi dengan YOLO
+        results = yolo_model(img_array)
+        st.subheader("🔍 Deteksi YOLO")
+        st.image(results[0].plot(), use_column_width=True)
 
-    elif menu == "Klasifikasi Gambar":
-        # Preprocessing
-        img_resized = img.resize((224, 224))  # sesuaikan ukuran dengan model kamu
-        img_array = image.img_to_array(img_resized)
-        img_array = np.expand_dims(img_array, axis=0)
-        img_array = img_array / 255.0
+        # Prediksi dengan TensorFlow
+        img_resized = cv2.resize(img_array, (224, 224))
+        img_resized = np.expand_dims(img_resized / 255.0, axis=0)
+        tf_pred = tf_model.predict(img_resized)
+        st.subheader("🧠 Prediksi TensorFlow:")
+        st.write(tf_pred)
 
-        # Prediksi
-        prediction = classifier.predict(img_array)
-        class_index = np.argmax(prediction)
-        st.write("### Hasil Prediksi:", class_index)
-        st.write("Probabilitas:", np.max(prediction))
+    except Exception as e:
+        st.error(f"Terjadi kesalahan: {e}")
