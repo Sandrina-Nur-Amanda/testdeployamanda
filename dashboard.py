@@ -46,5 +46,3 @@ if uploaded_file is not None:
         # Prediksi
         prediction = classifier.predict(img_array)
         class_index = np.argmax(prediction)
-        st.write("### Hasil Prediksi:", class_index)
-        st.write("Probabilitas:", np.max(prediction))
