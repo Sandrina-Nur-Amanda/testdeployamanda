@@ -1,7 +1,16 @@
+# Streamlit & ML dependencies
 streamlit==1.39.0
 ultralytics==8.2.52
-opencv-python-headless==4.9.0.80
-torch==2.2.1
-torchvision==0.17.1
+
+# OpenCV (gunakan versi headless agar aman di cloud)
+opencv-python-headless==4.8.0.74
+
+# PyTorch dan TensorFlow
+torch==2.0.1
+torchvision==0.15.2
+tensorflow-cpu==2.13.0
+
+# Utilities
 numpy==1.26.4
 pillow==10.2.0
+matplotlib==3.8.4
